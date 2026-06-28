@@ -156,17 +156,41 @@ class UserAssetsV2Endpoint(BaseAPIView):
 
         # Get the presigned URL
         storage = S3Storage(request=request)
-        # Generate a presigned URL to share an S3 object
-        presigned_url = storage.generate_presigned_post(object_name=asset_key, file_type=type, file_size=size_limit)
-        # Return the presigned URL
-        return Response(
-            {
-                "upload_data": presigned_url,
-                "asset_id": str(asset.id),
-                "asset_url": asset.asset_url,
-            },
-            status=status.HTTP_200_OK,
-        )
+
+        if storage.use_presigned_put:
+            # Use presigned PUT URL (required for Cloudflare R2)
+            presigned_url = storage.generate_presigned_put(
+                object_name=asset_key, file_type=type, file_size=size_limit
+            )
+            # Return presigned PUT data
+            return Response(
+                {
+                    "upload_data": {
+                        "url": presigned_url,
+                        "method": "PUT",
+                        "headers": {
+                            "Content-Type": type,
+                        },
+                    },
+                    "asset_id": str(asset.id),
+                    "asset_url": asset.asset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            # Use presigned POST URL (default, works with AWS S3, MinIO)
+            presigned_url = storage.generate_presigned_post(
+                object_name=asset_key, file_type=type, file_size=size_limit
+            )
+            # Return presigned POST data
+            return Response(
+                {
+                    "upload_data": presigned_url,
+                    "asset_id": str(asset.id),
+                    "asset_url": asset.asset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
 
     def patch(self, request, asset_id):
         # get the asset id
@@ -366,17 +390,41 @@ class WorkspaceFileAssetEndpoint(BaseAPIView):
 
         # Get the presigned URL
         storage = S3Storage(request=request)
-        # Generate a presigned URL to share an S3 object
-        presigned_url = storage.generate_presigned_post(object_name=asset_key, file_type=type, file_size=size_limit)
-        # Return the presigned URL
-        return Response(
-            {
-                "upload_data": presigned_url,
-                "asset_id": str(asset.id),
-                "asset_url": asset.asset_url,
-            },
-            status=status.HTTP_200_OK,
-        )
+
+        if storage.use_presigned_put:
+            # Use presigned PUT URL (required for Cloudflare R2)
+            presigned_url = storage.generate_presigned_put(
+                object_name=asset_key, file_type=type, file_size=size_limit
+            )
+            # Return presigned PUT data
+            return Response(
+                {
+                    "upload_data": {
+                        "url": presigned_url,
+                        "method": "PUT",
+                        "headers": {
+                            "Content-Type": type,
+                        },
+                    },
+                    "asset_id": str(asset.id),
+                    "asset_url": asset.asset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            # Use presigned POST URL (default, works with AWS S3, MinIO)
+            presigned_url = storage.generate_presigned_post(
+                object_name=asset_key, file_type=type, file_size=size_limit
+            )
+            # Return presigned POST data
+            return Response(
+                {
+                    "upload_data": presigned_url,
+                    "asset_id": str(asset.id),
+                    "asset_url": asset.asset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def patch(self, request, slug, asset_id):
@@ -569,17 +617,41 @@ class ProjectAssetEndpoint(BaseAPIView):
 
         # Get the presigned URL
         storage = S3Storage(request=request)
-        # Generate a presigned URL to share an S3 object
-        presigned_url = storage.generate_presigned_post(object_name=asset_key, file_type=type, file_size=size_limit)
-        # Return the presigned URL
-        return Response(
-            {
-                "upload_data": presigned_url,
-                "asset_id": str(asset.id),
-                "asset_url": asset.asset_url,
-            },
-            status=status.HTTP_200_OK,
-        )
+
+        if storage.use_presigned_put:
+            # Use presigned PUT URL (required for Cloudflare R2)
+            presigned_url = storage.generate_presigned_put(
+                object_name=asset_key, file_type=type, file_size=size_limit
+            )
+            # Return presigned PUT data
+            return Response(
+                {
+                    "upload_data": {
+                        "url": presigned_url,
+                        "method": "PUT",
+                        "headers": {
+                            "Content-Type": type,
+                        },
+                    },
+                    "asset_id": str(asset.id),
+                    "asset_url": asset.asset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            # Use presigned POST URL (default, works with AWS S3, MinIO)
+            presigned_url = storage.generate_presigned_post(
+                object_name=asset_key, file_type=type, file_size=size_limit
+            )
+            # Return presigned POST data
+            return Response(
+                {
+                    "upload_data": presigned_url,
+                    "asset_id": str(asset.id),
+                    "asset_url": asset.asset_url,
+                },
+                status=status.HTTP_200_OK,
+            )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def patch(self, request, slug, project_id, pk):

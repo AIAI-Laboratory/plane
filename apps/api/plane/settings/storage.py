@@ -35,6 +35,8 @@ class S3Storage(S3Boto3Storage):
         self.aws_s3_endpoint_url = os.environ.get("AWS_S3_ENDPOINT_URL") or os.environ.get("MINIO_ENDPOINT_URL")
         # Use the SIGNED_URL_EXPIRATION environment variable for the expiration time (default: 3600 seconds)
         self.signed_url_expiration = int(os.environ.get("SIGNED_URL_EXPIRATION", "3600"))
+        # Use PRESIGNED_PUT to enable presigned PUT uploads instead of POST (required for Cloudflare R2)
+        self.use_presigned_put = os.environ.get("USE_PRESIGNED_PUT", "0") == "1"
 
         if os.environ.get("USE_MINIO") == "1":
             # Determine protocol based on environment variable
@@ -94,6 +96,32 @@ class S3Storage(S3Boto3Storage):
         # Handle errors
         except ClientError as e:
             print(f"Error generating presigned POST URL: {e}")
+            return None
+
+        return response
+
+    def generate_presigned_put(self, object_name, file_type=None, file_size=None, expiration=None):
+        """Generate a presigned URL for PUT upload (required for Cloudflare R2)"""
+        if expiration is None:
+            expiration = self.signed_url_expiration
+
+        try:
+            params = {
+                "Bucket": self.aws_storage_bucket_name,
+                "Key": object_name,
+            }
+            # Add Content-Type condition if specified
+            if file_type:
+                params["ContentType"] = file_type
+
+            response = self.s3_client.generate_presigned_url(
+                "put_object",
+                Params=params,
+                ExpiresIn=expiration,
+                HttpMethod="PUT",
+            )
+        except ClientError as e:
+            print(f"Error generating presigned PUT URL: {e}")
             return None
 
         return response

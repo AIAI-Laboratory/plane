@@ -23,18 +23,28 @@ export type TFileMetaData = TFileMetaDataLite & TFileEntityInfo;
 export type TFileSignedURLResponse = {
   asset_id: string;
   asset_url: string;
-  upload_data: {
-    url: string;
-    fields: {
-      "Content-Type": string;
-      key: string;
-      "x-amz-algorithm": string;
-      "x-amz-credential": string;
-      "x-amz-date": string;
-      policy: string;
-      "x-amz-signature": string;
-    };
-  };
+  upload_data:
+    | {
+        // POST method (default for AWS S3, MinIO)
+        url: string;
+        fields: {
+          "Content-Type": string;
+          key: string;
+          "x-amz-algorithm": string;
+          "x-amz-credential": string;
+          "x-amz-date": string;
+          policy: string;
+          "x-amz-signature": string;
+        };
+      }
+    | {
+        // PUT method (for Cloudflare R2 and S3-compatible services that don't support POST)
+        url: string;
+        method: "PUT";
+        headers: {
+          "Content-Type": string;
+        };
+      };
 };
 
 export type TDuplicateAssetData = {

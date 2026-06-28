@@ -88,7 +88,12 @@ export class SitesFileService extends FileService {
       .then(async (response) => {
         const signedURLResponse: TFileSignedURLResponse = response?.data;
         const fileUploadPayload = generateFileUploadPayload(signedURLResponse, file);
-        await this.fileUploadService.uploadFile(signedURLResponse.upload_data.url, fileUploadPayload);
+        await this.fileUploadService.uploadFile(
+          fileUploadPayload.url,
+          fileUploadPayload.file,
+          fileUploadPayload.method,
+          fileUploadPayload.headers
+        );
         await this.updateAssetUploadStatus(anchor, signedURLResponse.asset_id);
         return signedURLResponse;
       })

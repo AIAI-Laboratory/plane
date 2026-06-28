@@ -50,16 +50,44 @@ const validateFilename = (filename: string): string | null => {
 };
 
 /**
+ * Check if the upload_data contains PUT method fields
+ */
+const isPUTUpload = (uploadData: TFileSignedURLResponse["upload_data"]): uploadData is { url: string; method: "PUT"; headers: Record<string, string> } => {
+  return "method" in uploadData && uploadData.method === "PUT";
+};
+
+/**
  * @description from the provided signed URL response, generate a payload to be used to upload the file
+ * Supports both POST (presigned form) and PUT (presigned URL) methods
  * @param {TFileSignedURLResponse} signedURLResponse
  * @param {File} file
- * @returns {FormData} file upload request payload
+ * @returns {{ url: string, file: File | FormData, method: string, headers?: Record<string, string> }}
  */
-export const generateFileUploadPayload = (signedURLResponse: TFileSignedURLResponse, file: File): FormData => {
+export const generateFileUploadPayload = (
+  signedURLResponse: TFileSignedURLResponse,
+  file: File
+): { url: string; file: File | FormData; method: string; headers?: Record<string, string> } => {
+  const uploadData = signedURLResponse.upload_data;
+
+  // Check if this is a PUT upload (Cloudflare R2 compatible)
+  if (isPUTUpload(uploadData)) {
+    return {
+      url: uploadData.url,
+      file,
+      method: "PUT",
+      headers: uploadData.headers,
+    };
+  }
+
+  // POST upload (default for AWS S3, MinIO)
   const formData = new FormData();
-  Object.entries(signedURLResponse.upload_data.fields).forEach(([key, value]) => formData.append(key, value));
+  Object.entries(uploadData.fields).forEach(([key, value]) => formData.append(key, value));
   formData.append("file", file);
-  return formData;
+  return {
+    url: uploadData.url,
+    file: formData,
+    method: "POST",
+  };
 };
 
 /**

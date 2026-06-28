@@ -84,8 +84,10 @@ export class FileService extends APIService {
         const signedURLResponse: TFileSignedURLResponse = response?.data;
         const fileUploadPayload = generateFileUploadPayload(signedURLResponse, file);
         await this.fileUploadService.uploadFile(
-          signedURLResponse.upload_data.url,
-          fileUploadPayload,
+          fileUploadPayload.url,
+          fileUploadPayload.file,
+          fileUploadPayload.method,
+          fileUploadPayload.headers,
           uploadProgressHandler
         );
         await this.updateWorkspaceAssetUploadStatus(workspaceSlug.toString(), signedURLResponse.asset_id);
@@ -161,8 +163,10 @@ export class FileService extends APIService {
         const signedURLResponse: TFileSignedURLResponse = response?.data;
         const fileUploadPayload = generateFileUploadPayload(signedURLResponse, file);
         await this.fileUploadService.uploadFile(
-          signedURLResponse.upload_data.url,
-          fileUploadPayload,
+          fileUploadPayload.url,
+          fileUploadPayload.file,
+          fileUploadPayload.method,
+          fileUploadPayload.headers,
           uploadProgressHandler
         );
         await this.updateProjectAssetUploadStatus(workspaceSlug, projectId, signedURLResponse.asset_id);
@@ -190,7 +194,12 @@ export class FileService extends APIService {
       .then(async (response) => {
         const signedURLResponse: TFileSignedURLResponse = response?.data;
         const fileUploadPayload = generateFileUploadPayload(signedURLResponse, file);
-        await this.fileUploadService.uploadFile(signedURLResponse.upload_data.url, fileUploadPayload);
+        await this.fileUploadService.uploadFile(
+          fileUploadPayload.url,
+          fileUploadPayload.file,
+          fileUploadPayload.method,
+          fileUploadPayload.headers
+        );
         await this.updateUserAssetUploadStatus(signedURLResponse.asset_id);
         return signedURLResponse;
       })
@@ -266,7 +275,7 @@ export class FileService extends APIService {
   }
 
   cancelUpload() {
-    this.cancelSource.cancel("Upload canceled");
+    this.cancelSource?.cancel("Upload canceled");
   }
 
   async getUnsplashImages(query?: string): Promise<UnSplashImage[]> {
